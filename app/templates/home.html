@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <style>
+        .dropdown-menu-end {
+            right: 0;
+            left: auto;
+        }
+        .section-spacing {
+            margin-bottom: 2em;
+        }
+        .header-spacing {
+            margin-bottom: 1.5em;
+        }
+        .footer-spacing {
+            margin-top: 2em;
+        }
+
+        #features .col {
+            min-height: 300px; /* Adjust the height as needed */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .feature-paragraph {
+        font-size: 1.4em; /* Adjust the size as needed */
+        }
+
+        .about1-section {
+        min-height: 800px; /* Adjust this value as needed */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        }
+
+        .custom-height {
+        min-height: 600px; /* Adjust the height as needed */
+        }
+
+        #help-subheading {
+        font-size: 2rem;
+        }
+
+        #help-paragraph {
+        font-size: 1.4rem;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="container">
+            <header class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 border-bottom header-spacing">
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                    <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
+                    <span class="fs-4"><img src="{{ url_for('static', filename='images/Docubot.png') }}" height="60" width="230"></span>
+                </a>
+                <ul class="nav nav-pills me-auto">
+                    <li class="nav-item"><a href="/" class="nav-link active" aria-current="page">Home</a></li>
+                    <li class="nav-item"><a href="#features" class="nav-link">Features</a></li>
+                    <li class="nav-item"><a href="#help" class="nav-link">Help</a></li>
+                </ul>
+                <div class="dropdown text-end">
+                    <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ url_for('static', filename='images/user.jpg') }}" alt="user image" width="60" height="60" class="rounded-circle">
+                    </a>
+                    <ul class="dropdown-menu text-small">
+                        {% if current_user.is_authenticated %}
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{{ url_for('login') }}">Login</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Sign Up</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </header>
+        </div>
+
+        <div id="about1" class="px-4 py-5 my-5 text-center section-spacing">
+            <img class="d-block mx-auto mb-4" src="{{ url_for('static', filename='images/Docubot_logo.png') }}" width="100" height="100">
+            <h1 class="display-5 fw-bold text-body-emphasis">Welcome to DocuBot!</h1>
+            <h2>Empower Your Documents with Smart Answers</h2>
+            <div class="col-lg-6 mx-auto">
+                <p class="lead mb-4" style="font-size: 1.4rem;">DocuBot is your smart assistant, designed to make interacting with documents easier and more efficient than ever. Whether you need quick answers, detailed insights, or just a better way to manage your PDFs, DocuBot is here to help.</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 gap-3">Sign-up. It's free</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="features" class="container px-4 py-5 section-spacing">
+            <h2 class="pb-2 border-bottom" style="font-size: 3.5em;">Features</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-4 py-5">
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis">Smart PDF Reading:</h3>
+                    <p class="feature-paragraph">Upload any PDF document, and DocuBot will read and analyze it, extracting the information you need.</p>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis feature-heading ">Instant Q&A</h3>
+                    <p class="feature-paragraph">Ask any question about your document, and get accurate, relevant answers in real-time.</p>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis feature-heading">User-Friendly Interface</h3>
+                    <p class="feature-paragraph">Our intuitive interface makes it easy to upload documents and interact with DocuBot. No technical skills required!.</p>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis feature-heading">Secure and Private</h3>
+                    <p class="feature-paragraph">Your documents are secure with us. We prioritize your privacy and ensure that your data is handled with the utmost care.</p>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis feature-heading ">Contextual Search</h3>
+                    <p class="feature-paragraph">Find specific information within your documents using advanced search capabilities that understand the context of your queries.</p>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <h3 class="fw-bold mb-0 fs-2.5 text-body-emphasis feature-heading" >Time-Saving</h3>
+                    <p class="feature-paragraph">DocuBot saves time with automated document processing, summarization, advanced search, and workflow automation, reducing manual effort for critical tasks.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="help" class="container px-4 py-5 section-spacing">
+            <div class="row mb-2">
+                <div class="col-md-6 d-flex align-items-stretch custom-height">
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                        <div class="col p-4 d-flex flex-column position-static">
+                            <h3><strong class="d-inline-block mb-2 text-primary-emphasis" style="font-size: 2.8rem;">How It Works</strong></h3>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Step 1: Upload Your PDF</div></h4>
+                            <p id="help-paragraph" class="card-text mb-auto">Simply drag and drop your PDF document into DocuBot’s interface.</p>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Step 2: Ask Your Questions</div></h4>
+                            <p id="help-paragraph" class="card-text mb-auto">Type your questions into the chat, and DocuBot will provide clear and concise answers.</p>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Step 3: Get Your Answers</div></h4>
+                            <p id="help-paragraph" class="card-text mb-auto">Receive instant responses and gain deeper insights into your documents.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-stretch custom-height">
+                    <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                        <div class="col p-4 d-flex flex-column position-static">
+                            <h3><strong class="d-inline-block mb-2 text-success-emphasis" style="font-size: 2.8rem;">Why Choose DocuBot?</strong></h3>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Efficiency</div></h4>
+                            <p id="help-paragraph" class="mb-auto">Save time by getting quick answers from your documents without having to read through them entirely.</p>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Accuracy</div></h4>
+                            <p id="help-paragraph" class="mb-auto">Benefit from precise information retrieval powered by advanced AI and natural language processing.</p>
+                            <h4 class="mb-0">
+                            <div id="help-subheading" class="mb-1">Convenience</div></h4>
+                            <p id="help-paragraph" class="mb-auto">Access your document's information anytime, anywhere, with a simple and easy-to-use platform.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+            <div class="container footer-spacing">
+                <footer class="d-flex justify-content-center align-items-center py-3 my-4 border-top">
+                    <p class="mb-0 text-body-secondary">© 2024 DocuBot. All rights reserved</p>
+                </footer>
+            </div>
+    </div>
+        
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybE6I3KpG1pJStlFf9P6S+1Zf3/HAA91P8dWXtk7+PQK8j7Sk" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.min.js" integrity="sha384-cn7l7gDp0eyz13bZ+M4xAZJZ8b6BMK4XxX3nRGoFQ0LX5XbmE5A6l5peRQe0cX6G" crossorigin="anonymous"></script>
+</body>
+</html>
