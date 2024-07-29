@@ -273,7 +273,13 @@ logger = logging.getLogger(__name__)
 @login_required
 def chat():
     global retriever  # Ensure retriever is used globally
-    chat_history = list(db.chat_histories.find({'owner_email': current_user.email}))  # Retrieve chat history for the current user
+    session_id = request.args.get('session_id')  # from request arguments get session_id
+    if not session_id:
+        session_id = str(ObjectId())
+        session['session_id'] = session_id
+
+    # Retrieving chat_history for that particular current session of the current user
+    chat_history = ChatHistory.get_session_history(current_user.email, session_id)
 
     if request.method == 'POST':
         query = request.form['query']   # Get the user query from the form
@@ -284,8 +290,7 @@ def chat():
         logger.info(f"User query: {query}")
         logger.info(f"Chat history: {formatted_history}")
         try:
-             # Invoke the rag_chain
-            result = rag_chain.invoke({"input": query, "chat_history": formatted_history})
+            result = rag_chain.invoke({"input": query, "chat_history": formatted_history})  # Invoke the rag_chain
             ai_response = result.get('answer', "No response from AI.")
             logger.info(f"AI response: {ai_response}")
         except Exception as e:
@@ -293,13 +298,33 @@ def chat():
             ai_response = "An error occurred during retrieval."
 
         # Save the new chat interaction to the database
-        new_chat = ChatHistory(user_input=query, ai_response=ai_response, owner_email=current_user.email)
+        new_chat = ChatHistory(user_input=query, ai_response=ai_response, owner_email=current_user.email, session_id=session_id)
         new_chat.save()
         chat_history.append(new_chat)
 
         return jsonify(user_input=query, ai_response=ai_response)  # Return response as JSON
 
-    return render_template('chat.html', chat_history=chat_history)
+    user_sessions = ChatHistory.get_user_sessions(current_user.email)
+    return render_template('chat.html', chat_history=chat_history, user_sessions=user_sessions, current_session_id=session_id)
+
+
+@app.route('/start_new_session')
+@login_required
+def start_new_session():
+    session_id = str(ObjectId())
+    session['session_id'] = session_id
+    return redirect(url_for('chat', session_id=session_id))
+
+@app.route('/update_session_name', methods=['POST'])
+@login_required
+def update_session_name():
+    data = request.json
+    session_id = data.get('session_id')
+    new_session_name = data.get('new_session_name')
+    if session_id and new_session_name:
+        ChatHistory.update_session_name(current_user.email, session_id, new_session_name)
+        return jsonify(success=True)
+    return jsonify(success=False)
 
 # Logout route
 @app.route('/logout')

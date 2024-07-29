@@ -91,11 +91,13 @@ class Document:
 
 # chat history data
 class ChatHistory:
-    def __init__(self, user_input, ai_response, owner_email, timestamp=None):
+    def __init__(self, user_input, ai_response, owner_email, session_id=None, session_name=None,  timestamp=None):
         self.user_input = user_input
         self.ai_response = ai_response
         self.timestamp = timestamp or datetime.now(timezone.utc)
         self.owner_email = owner_email
+        self.session_id = session_id if session_id else str(ObjectId())
+        self.session_name = session_name
 
     # Static method to create a ChatHistory object from MongoDB data
     @staticmethod
@@ -104,16 +106,50 @@ class ChatHistory:
             user_input=data['user_input'],
             ai_response=data['ai_response'],
             owner_email=data['owner_email'],
+            session_id=data['session_id'],
+            session_name=data.get('session_name'),
             timestamp=data['timestamp']
         )
 
     # save the chat history to the database
     def save(self):
         db.chat_histories.update_one(
-            {'user_input': self.user_input, 'owner_email': self.owner_email},
+            {'user_input': self.user_input, 'owner_email': self.owner_email, 'session_id': self.session_id},
             {'$set': self.__dict__},
             upsert=True
         )
+    
+    # to get all chat sessions of a user to display in the side bar
+    @staticmethod
+    def get_user_sessions(owner_email):
+        pipeline = [
+            {'$match': {'owner_email': owner_email}},
+            {'$group': {'_id': '$session_id', 'session_name': {'$first': '$session_name'}, 'timestamp': {'$max': '$timestamp'}}},
+            {'$sort': {'timestamp': -1}}
+        ]
+        return list(db.chat_histories.aggregate(pipeline))
+
+    # to get the chat history of a specific session of a user
+    @staticmethod
+    def get_session_history(owner_email, session_id):
+        return list(db.chat_histories.find({'owner_email': owner_email, 'session_id': session_id}))
+    
+    #to get the latest session id of a user
+    @staticmethod
+    def get_latest_session(owner_email):
+        latest_chat = db.chat_histories.find({'owner_email': owner_email}).sort('timestamp', -1).limit(1)
+        if latest_chat:
+            return latest_chat[0]['session_id']
+        return None
+    
+    # to update session name
+    @staticmethod
+    def update_session_name(owner_email, session_id, session_name):
+        db.chat_histories.update_many(
+            {'owner_email': owner_email, 'session_id': session_id},
+            {'$set': {'session_name': session_name}}
+        )
+
 
 # for unique constraints on email and username fields
 db.users.create_index([('email', ASCENDING)], unique=True)

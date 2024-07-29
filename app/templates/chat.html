@@ -3,15 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <style>
+        .main-container {
+            display: flex;
+        }
+        .sidebar {
+            background-color: #d3d3d3; /* Darker grey background for sidebar */
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+            padding-top: 20px;
+        }
+        .sidebar .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        .sidebar .session {
+            padding: 10px 20px;
+            border-bottom: 1px solid #ccc;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar .session:hover {
+            background-color: #bbb;
+        }
+        .content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+        }
         .chat-container {
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
@@ -19,6 +54,8 @@
             display: flex;
             flex-direction: column;
             height: 80vh; /* Set height for the chat container */
+            margin-left: 200px;
+            margin-right: 200px;
         }
         .chat-history {
             flex: 1;
@@ -88,6 +125,11 @@
         .input-group .btn {
             height: 50px; /* Ensure the button has the same height as the input box */
         }
+        .rename-icon {
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
     </style>
     <!-- JavaScript for handling chat functionality -->
     <script>
@@ -100,7 +142,7 @@
                 event.preventDefault();
                 const formData = new FormData(form);
 
-                fetch('{{ url_for("chat") }}', {
+                fetch('{{ url_for("chat", session_id=current_session_id) }}', {
                     method: 'POST',
                     body: formData
                 })
@@ -132,67 +174,120 @@
 
             // Scroll to the bottom (latest messages) when the page loads
             chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // For the New Chat button
+            document.getElementById('newChatButton').addEventListener('click', function() {
+                window.location.href = "{{ url_for('start_new_session') }}";
+            });
+
+            // For the session divs
+            document.querySelectorAll('.session').forEach(function(sessionDiv) {
+                sessionDiv.addEventListener('click', function() {
+                    const sessionId = this.getAttribute('data-session-id');
+                    window.location.href = "{{ url_for('chat') }}?session_id=" + sessionId;
+                });
+            });
+
+            // For renaming session_name
+            document.querySelectorAll('.rename-icon').forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    const sessionDiv = this.closest('.session');
+                    const sessionId = sessionDiv.getAttribute('data-session-id');
+                    const newName = prompt('Enter new session name:');
+                    if (newName) {
+                        fetch('{{ url_for("update_session_name") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ session_id: sessionId, new_session_name: newName })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                sessionDiv.querySelector('.session-name').textContent = newName;
+                            } else {
+                                alert('Failed to rename session');
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 </head>
 <body>
-    <div class="content">
-        <div class="container">
-            <header class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 border-bottom">
-                <a class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-                    <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
-                    <span class="fs-4"><img src="{{ url_for('static', filename='images/Docubot.png') }}" height="60" width="230"></span>
-                </a>
-                <ul class="nav nav-pills me-auto">
-                    <li class="nav-item"><a href="{{ url_for('upload') }}" class="nav-link">Upload a new PDF</a></li>
-                </ul>
-                <div class="dropdown text-end">
-                    <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ url_for('static', filename='images/user.jpg') }}" alt="user image" width="60" height="60" class="rounded-circle">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
-                        {% if current_user.is_authenticated %}
-                            <li class="dropdown-item">Hi, {{ current_user.first_name }}</li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-                        {% else %}
-                            <li><a class="dropdown-item" href="{{ url_for('login') }}">Login</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('register') }}">Sign Up</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </header>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="header">
+                <span>Previous Chats</span>
+                <button class="btn btn-primary btn-sm" id="newChatButton">New Chat</button>
+            </div>
+            {% for session in user_sessions %}
+            <div class="session" data-session-id="{{ session._id }}">
+                <span class="session-name">{{ session.session_name or 'Session ' ~ loop.index }}</span>
+                <i class="rename-icon fas fa-pencil-alt"></i>
+            </div>
+            {% endfor %}
         </div>
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="content">
+            <div class="container">
+                <header class="d-flex flex-wrap justify-content-between align-items-center py-3 mb-4 border-bottom">
+                    <a class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                        <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
+                        <span class="fs-4"><img src="{{ url_for('static', filename='images/Docubot.png') }}" height="60" width="230"></span>
+                    </a>
+                    <ul class="nav nav-pills me-auto">
+                        <li class="nav-item"><a href="{{ url_for('upload') }}" class="nav-link">Upload a new PDF</a></li>
+                    </ul>
+                    <div class="dropdown text-end">
+                        <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ url_for('static', filename='images/user.jpg') }}" alt="user image" width="60" height="60" class="rounded-circle">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+                            {% if current_user.is_authenticated %}
+                                <li class="dropdown-item">Hi, {{ current_user.first_name }}</li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                            {% else %}
+                                <li><a class="dropdown-item" href="{{ url_for('login') }}">Login</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('register') }}">Sign Up</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </header>
+            </div>
+            <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="chat-container">
+                <h3 style="text-align: center;">Chat</h3>
+                <div class="chat-history">
+                    {% for chat in chat_history %}
+                        <div class="chat-bubble user-bubble">
+                            <div class="bubble-content">{{ chat.user_input }}</div>
+                            <div class="icon-circle">{{ current_user.first_name[0].upper() }}</div>
+                        </div>
+                        <div class="chat-bubble ai-bubble">
+                            <div class="icon-circle ai-icon-circle">AI</div>
+                            <div class="bubble-content">{{ chat.ai_response }}</div>
                         </div>
                     {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
-        <div class="chat-container">
-            <h3 style="text-align: center;">Chat</h3>
-            <div class="chat-history">
-                {% for chat in chat_history %}
-                    <div class="chat-bubble user-bubble">
-                        <div class="bubble-content">{{ chat.user_input }}</div>
-                        <div class="icon-circle">{{ current_user.first_name[0].upper() }}</div>
-                    </div>
-                    <div class="chat-bubble ai-bubble">
-                        <div class="icon-circle ai-icon-circle">AI</div>
-                        <div class="bubble-content">{{ chat.ai_response }}</div>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="form-container">
-                <form method="POST" class="input-group">
-                    <input type="text" name="query" class="form-control chat-input" placeholder="Ask a question" required>
-                    <button type="submit" class="btn btn-primary">Ask</button>
-                </form>
+                </div>
+                <div class="form-container">
+                    <form method="POST" class="input-group">
+                        <input type="text" name="query" class="form-control chat-input" placeholder="Ask a question" required>
+                        <button type="submit" class="btn btn-primary">Ask</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
